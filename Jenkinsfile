@@ -43,8 +43,7 @@ app = Flask(__name__)
 def hello():
     return """
     <body style="background-color:#f0f8ff; font-family:sans-serif; text-align:center; padding-top:100px;">
-        <h1 style="color:#2e8b57;">Pipeline Full Cycle Success!</h1>
-        <p style="font-size:20px;">Data Engineering Track - Jenkins Task</p>
+        <h1 style="color:#2e8b57;">Welcome To Two Tier Flask App!</h1>
         <div style="margin-top:20px; color:#555;">Status: Application Live</div>
     </body>
     """
