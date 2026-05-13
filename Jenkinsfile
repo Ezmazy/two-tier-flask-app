@@ -4,38 +4,38 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // This downloads your forked repo
                 checkout scm
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Creating Virtual Environment and Installing Dependencies...'
-                // 1. Create the 'venv' folder
-                // 2. Use the pip inside that folder to install requirements
+                echo 'Setting up the Python virtual environment...'
                 sh '''
                 python3 -m venv venv
+                ./venv/bin/pip install --upgrade pip
                 ./venv/bin/pip install -r requirements.txt
+                ./venv/bin/pip install pytest flask
                 '''
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests within the Virtual Environment...'
-                // Use the python inside the venv to run pytest
+                echo 'Running tests...'
+                // This looks for any file starting with test_
                 sh './venv/bin/python3 -m pytest'
             }
         }
 
         stage('Deploy') {
             steps {
-                echo 'Deploying Application...'
-                // 1. Kill any app already on port 5000
-                // 2. Run the app using the venv python
+                echo 'Launching Application...'
                 sh '''
+                # This clears port 5000 so the app can start fresh
                 fuser -k 5000/tcp || true
+                
+                # Starts the app in the background using the venv
                 JENKINS_NODE_COOKIE=dontKillMe nohup ./venv/bin/python3 app.py > app.log 2>&1 &
                 '''
             }
