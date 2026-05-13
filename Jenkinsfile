@@ -4,36 +4,39 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Downloads your code from GitHub
+                // This downloads your forked repo
                 checkout scm
             }
         }
 
         stage('Build') {
             steps {
-                echo 'Installing dependencies...'
-                // --break-system-packages is sometimes needed in newer Ubuntu versions
-                // We use python3 -m pip to ensure we use the correct version
-                sh 'python3 -m pip install --user -r requirements.txt'
+                echo 'Creating Virtual Environment and Installing Dependencies...'
+                // 1. Create the 'venv' folder
+                // 2. Use the pip inside that folder to install requirements
+                sh '''
+                python3 -m venv venv
+                ./venv/bin/pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                // This command tells Python to run the pytest module on your code
-                sh 'python3 -m pytest'
+                echo 'Running tests within the Virtual Environment...'
+                // Use the python inside the venv to run pytest
+                sh './venv/bin/python3 -m pytest'
             }
         }
 
         stage('Deploy') {
             steps {
                 echo 'Deploying Application...'
-                // 1. Kill any app already running on port 5000 so the new one can start
-                // 2. Start the app in the background
+                // 1. Kill any app already on port 5000
+                // 2. Run the app using the venv python
                 sh '''
                 fuser -k 5000/tcp || true
-                JENKINS_NODE_COOKIE=dontKillMe nohup python3 app.py > app.log 2>&1 &
+                JENKINS_NODE_COOKIE=dontKillMe nohup ./venv/bin/python3 app.py > app.log 2>&1 &
                 '''
             }
         }
