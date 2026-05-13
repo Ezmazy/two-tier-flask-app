@@ -4,6 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                // Downloads your code from GitHub
                 checkout scm
             }
         }
@@ -11,7 +12,8 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Installing dependencies...'
-                // Using 'python3 -m pip' is more reliable than just 'pip'
+                // --break-system-packages is sometimes needed in newer Ubuntu versions
+                // We use python3 -m pip to ensure we use the correct version
                 sh 'python3 -m pip install --user -r requirements.txt'
             }
         }
@@ -19,7 +21,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running tests...'
-                // Using 'python3 -m pytest' ensures it uses the correct python version
+                // This command tells Python to run the pytest module on your code
                 sh 'python3 -m pytest'
             }
         }
@@ -27,8 +29,12 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying Application...'
-                // This starts the app in the background
-                sh 'JENKINS_NODE_COOKIE=dontKillMe nohup python3 app.py > app.log 2>&1 &'
+                // 1. Kill any app already running on port 5000 so the new one can start
+                // 2. Start the app in the background
+                sh '''
+                fuser -k 5000/tcp || true
+                JENKINS_NODE_COOKIE=dontKillMe nohup python3 app.py > app.log 2>&1 &
+                '''
             }
         }
     }
